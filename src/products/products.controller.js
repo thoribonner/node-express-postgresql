@@ -1,14 +1,37 @@
-function read(req, res, next) {
-  res.json({ data: { product_title: "some product title" } });
+const service = require("./products.service");
+
+// * validation
+
+// * verify product id exists
+function productExists(req, res, nxt) {
+  service
+    .read(req.params.productId)
+    .then((product) => {
+      if (product) {
+        res.locals.product = product;
+        return nxt();
+      }
+      nxt({ status: 404, message: "Product cannot be found." });
+    })
+    .catch(nxt);
+}
+// * end validation
+
+// * get product by id
+function read(req, res) {
+  const { product: data } = res.locals;
+  res.json({ data });
 }
 
-function list(req, res, next) {
-  res.json({
-    data: [{ product_title: "product 1" }, { product_title: "product 2" }],
-  });
+// * get all products
+function list(req, res, nxt) {
+  service
+    .list()
+    .then((data) => res.json({ data }))
+    .catch(next);
 }
 
 module.exports = {
-  read: [read],
+  read: [productExists, read],
   list: [list],
 };

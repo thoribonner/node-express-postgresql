@@ -1,11 +1,11 @@
-async function list(req, res, next) {
-  res.json({
-    data: [
-      { category_name: "category 1" },
-      { category_name: "category 2" },
-      { category_name: "category 3" },
-    ],
-  });
+const service = require("./categories.service");
+
+// * get all categories
+function list(req, res, nxt) {
+  return service
+    .list()
+    .then((data) => res.json({ data }))
+    .catch(nxt);
 }
 
 module.exports = {
