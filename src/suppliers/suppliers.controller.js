@@ -4,7 +4,7 @@ const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
 // * valdation
 
-// * array of valid properties
+// * existing columns in table
 const VALID_PROPERTIES = [
   "supplier_name",
   "supplier_address_line_1",
@@ -49,17 +49,16 @@ async function supplierExists(req, res, nxt) {
   }
   nxt({ status: 404, message: `Supplier cannot be found` });
 }
-
 // * end validation
 
 // * add new supplier
-async function create(req, res, nxt) {
+async function create(req, res) {
   const data = await service.create(req.body.data);
   res.status(201).json({ data });
 }
 
 // * update existing supplier
-async function update(req, res, nxt) {
+async function update(req, res) {
   const updatedSupplier = {
     ...req.body.data,
     supplier_id: res.locals.supplier.supplier_id,
@@ -68,7 +67,7 @@ async function update(req, res, nxt) {
   res.json({ data });
 }
 
-async function destroy(req, res, nxt) {
+async function destroy(req, res) {
   await service.delete(res.locals.supplier.supplier_id);
   res.sendStatus(204);
 }
@@ -85,5 +84,8 @@ module.exports = {
     hasRequiredProperties,
     asyncErrorBoundary(update),
   ],
-  delete: [supplierExists, destroy],
+  delete: [
+    asyncErrorBoundary(supplierExists),
+    asyncErrorBoundary(destroy)
+  ],
 };
