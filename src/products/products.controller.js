@@ -1,19 +1,17 @@
 const service = require("./products.service");
+const asyncErrorBoundary = require('../errors/asyncErrorBoundary');
 
 // * validation
 
 // * verify product id exists
 function productExists(req, res, nxt) {
-  service
-    .read(req.params.productId)
-    .then((product) => {
-      if (product) {
-        res.locals.product = product;
-        return nxt();
-      }
-      nxt({ status: 404, message: "Product cannot be found." });
-    })
-    .catch(nxt);
+  const product = await service.read(req.params.productId);
+
+  if (product) {
+    res.locals.product = product;
+    return nxt();
+  }
+  nxt({ status: 404, message: "Product cannot be found." });
 }
 // * end validation
 
@@ -25,13 +23,11 @@ function read(req, res) {
 
 // * get all products
 function list(req, res, nxt) {
-  service
-    .list()
-    .then((data) => res.json({ data }))
-    .catch(next);
+  const data = await service.list();
+  res.json({ data });
 }
 
 module.exports = {
-  read: [productExists, read],
-  list: [list],
+  read: [asyncErrorBoundary(productExists), read],
+  list: [asyncErrorBoundary(list)],
 };

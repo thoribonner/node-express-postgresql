@@ -1,13 +1,12 @@
 const service = require("./categories.service");
+const asyncErrorBoundary = require('../errors/asyncErrorBoundary');
 
 // * get all categories
-function list(req, res, nxt) {
-  return service
-    .list()
-    .then((data) => res.json({ data }))
-    .catch(nxt);
+async function list(req, res, nxt) {
+  const data = await service.list();
+  res.json({ data });
 }
 
 module.exports = {
-  list: [list],
+  list: [asyncErrorBoundary(list)],
 };

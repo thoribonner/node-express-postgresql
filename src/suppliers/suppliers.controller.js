@@ -1,5 +1,6 @@
 const service = require("./suppliers.service");
 const hasProperties = require("../errors/hasProperties");
+const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
 // * valdation
 
@@ -39,55 +40,50 @@ const hasRequiredProperties = hasProperties("supplier_name", "supplier_email");
 
 // * verify supplier id exists
 // * ensures supplier id not overwritten
-function supplierExists(req, res, nxt) {
-  service
-    .read(req.params.supplierId)
-    .then((supplier) => {
-      if (supplier) {
-        res.locals.supplier = supplier;
-        return nxt();
-      }
-      nxt({ status: 404, message: `Supplier cannot be found` });
-    })
-    .catch(nxt);
+async function supplierExists(req, res, nxt) {
+  const supplier = await service.read(req.params.supplierId);
+
+  if (supplier) {
+    res.locals.supplier = supplier;
+    return nxt();
+  }
+  nxt({ status: 404, message: `Supplier cannot be found` });
 }
 
 // * end validation
 
 // * add new supplier
-function create(req, res, nxt) {
-  service
-    .create(req.body.data)
-    .then((data) => res.status(201).json({ data }))
-    .catch(nxt);
+async function create(req, res, nxt) {
+  const data = await service.create(req.body.data);
+  res.status(201).json({ data });
 }
 
 // * update existing supplier
-function update(req, res, nxt) {
+async function update(req, res, nxt) {
   const updatedSupplier = {
     ...req.body.data,
     supplier_id: res.locals.supplier.supplier_id,
   };
-  service
-    .update(updatedSupplier)
-    .then((data) => res.json({ data }))
-    .catch(nxt);
+  const data = await service.update(updatedSupplier);
+  res.json({ data });
 }
 
 async function destroy(req, res, nxt) {
-  service
-    .delete(res.locals.supplier.supplier_id)
-    .then(() => res.sendStatus(204))
-    .catch(nxt);
+  await service.delete(res.locals.supplier.supplier_id);
+  res.sendStatus(204);
 }
 
 module.exports = {
-  create: [hasOnlyValidProperties, hasRequiredProperties, create],
-  update: [
-    supplierExists,
+  create: [
     hasOnlyValidProperties,
     hasRequiredProperties,
-    update,
+    asyncErrorBoundary(create),
+  ],
+  update: [
+    asyncErrorBoundary(supplierExists),
+    hasOnlyValidProperties,
+    hasRequiredProperties,
+    asyncErrorBoundary(update),
   ],
   delete: [supplierExists, destroy],
 };
