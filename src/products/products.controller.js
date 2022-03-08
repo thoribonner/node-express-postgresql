@@ -23,8 +23,7 @@ function read(req, res) {
 
 // * get all products
 function list(req, res, nxt) {
-  const data = await service.list();
-  res.json({ data });
+  res.json({ data: await service.list() });
 }
 
 // * get all out of stock products

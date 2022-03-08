@@ -5,7 +5,7 @@ function mapProperties(configuration) {
     if (data) {
       return Object.entries(
         data.reduce((acc, [key, value]) => {
-          return lodash.set(ass, configuration[key] || key, value);
+          return lodash.set(acc, configuration[key] || key, value);
         }, {})
       );
     }
