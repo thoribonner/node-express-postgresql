@@ -8,7 +8,7 @@ const addCategory = mapProperties({
 });
 
 // * return product by id with category information
-function read(productId) {
+function read(product_id) {
   return knex("products as p")
     .join("products_categories as pc", "p.product_id", "pc.product_id")
     .join("categories as c", "pc.category_id", "c.category_id")
